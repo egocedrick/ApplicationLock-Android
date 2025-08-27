@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">App Locker</string>
+    <string name="enter_pin">Enter PIN</string>
+    <string name="save_pin">Save PIN</string>
+    <string name="open_usage_access">Open Usage Access</string>
+    <string name="open_overlay_settings">Open Overlay Settings</string>
+    <string name="start_service">Start Protection</string>
+    <string name="stop_service">Stop Protection</string>
+    <string name="unlock">Unlock</string>
+</resources>
