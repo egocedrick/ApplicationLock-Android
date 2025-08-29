@@ -1,92 +1,98 @@
 package com.example.applicationlock
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import com.example.applicationlock.data.PinStore
-import com.example.applicationlock.data.Prefs
 import com.example.applicationlock.security.AttemptLimiter
+import com.example.applicationlock.security.LockState
 import com.example.applicationlock.security.PinGate
 
-class LockActivity : AppCompatActivity() {
+class LockActivity : Activity() {
 
-    companion object {
-        const val EXTRA_TARGET_PKG = "target_pkg"
-    }
-
+    private lateinit var pinInput: EditText
+    private lateinit var submit: Button
+    private lateinit var status: TextView
     private lateinit var pinStore: PinStore
-    private lateinit var prefs: Prefs
     private lateinit var limiter: AttemptLimiter
-    private lateinit var targetPkg: String
+    private var targetPkg: String = ""
 
+    @SuppressLint("InflateParams")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 1) Make sure the layout name matches this file (res/layout/activity_lock.xml).
+        targetPkg = intent.getStringExtra(Constants.EXTRA_TARGET_PKG) ?: packageName
+        pinStore = PinStore(this)
+        limiter = AttemptLimiter(this, targetPkg)
+
         setContentView(R.layout.activity_lock)
+        pinInput = findViewById(R.id.edit_pin_input)
+        submit = findViewById(R.id.btn_unlock)
+        status = findViewById(R.id.txt_lock_message)
 
-        // 2) Init helpers (these classes must exist in your project under the packages shown)
-        pinStore = PinStore(this)           // verifies appPin & lockPin (hashed or plain per your implementation)
-        prefs = Prefs(this)                 // for list of locked apps (if needed)
-        targetPkg = intent.getStringExtra(EXTRA_TARGET_PKG) ?: packageName
-        limiter = AttemptLimiter(this, scope = targetPkg, maxAttempts = 5)
+        if (limiter.isLockedOut()) {
+            status.text = "Too many wrong attempts. Locked."
+            submit.isEnabled = false
+            return
+        }
 
-        // 3) Bind views (IDs must match those in activity_lock.xml)
-        val txtApp = findViewById<TextView>(R.id.txtApp)
-        val editPin = findViewById<EditText>(R.id.editPin)
-        val btnUnlock = findViewById<Button>(R.id.btnUnlock)
+        if (targetPkg != packageName && PinGate.isAppUnlocked(targetPkg)) {
+            finish()
+            return
+        }
 
-        // 4) Show friendly label
-        txtApp.text = if (targetPkg == packageName) "App Locker" else "Unlock: $targetPkg"
+        status.text = if (targetPkg == packageName) "Enter App PIN" else "Enter Lock PIN"
 
-        // 5) Unlock flow
-        btnUnlock.setOnClickListener {
-            if (limiter.isLockedOut()) {
-                Toast.makeText(this, "Too many failed attempts. PIN entry disabled.", Toast.LENGTH_LONG).show()
-                return@setOnClickListener
-            }
+        submit.setOnClickListener {
+            val entered = pinInput.text.toString()
+            val ok = if (targetPkg == packageName) pinStore.verifyAppPin(entered) else pinStore.verifyLockPin(entered)
 
-            val entered = editPin.text.toString()
-
-            // verify using PinStore API (app PIN vs lock PIN)
-            val success = if (targetPkg == packageName) {
-                pinStore.verifyAppPin(entered)
-            } else {
-                pinStore.verifyLockPin(entered)
-            }
-
-            if (success) {
+            if (ok) {
                 limiter.reset()
                 if (targetPkg == packageName) {
-                    // app itself -> go to Settings or main area
-                    startActivity(Intent(this, SettingsActivity::class.java))
-                    finish()
+                    try { startActivity(Intent(this, SettingsActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) } catch (_: Exception) {}
                 } else {
-                    // third-party app: unlock for this session and finish to reveal app
                     PinGate.unlockForSession(targetPkg)
-                    finish()
                 }
+                finish()
             } else {
                 limiter.registerFailure()
                 val rem = limiter.remainingAttempts()
-                if (rem > 0) {
-                    Toast.makeText(this, "Wrong PIN ($rem tries left)", Toast.LENGTH_SHORT).show()
+                if (limiter.isLockedOut()) {
+                    status.text = "Too many wrong attempts. Locked."
+                    submit.isEnabled = false
+                    Toast.makeText(this, "Too many wrong attempts. Locked.", Toast.LENGTH_LONG).show()
                 } else {
-                    Toast.makeText(this, "Too many failed attempts. PIN entry disabled.", Toast.LENGTH_LONG).show()
+                    status.text = "Wrong PIN ($rem)"
+                    Toast.makeText(this, "Wrong PIN", Toast.LENGTH_SHORT).show()
                 }
             }
         }
     }
 
-    @Deprecated("This method has been deprecated in favor of using the\n      {@link OnBackPressedDispatcher} via {@link #getOnBackPressedDispatcher()}.\n      The OnBackPressedDispatcher controls how back button events are dispatched\n      to one or more {@link OnBackPressedCallback} objects.")
+    override fun onStart() {
+        super.onStart()
+        LockState.lockActivityVisible = true
+    }
+
+    override fun onStop() {
+        super.onStop()
+        LockState.lockActivityVisible = false
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        LockState.lockActivityVisible = false
+    }
+
     @SuppressLint("GestureBackNavigation")
+    @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
-        super.onBackPressed()
-        // prevent bypass — do nothing
+        // prevent bypass
     }
 }

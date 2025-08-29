@@ -5,85 +5,130 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
+import android.app.usage.UsageEvents
+import android.app.usage.UsageStatsManager
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
+import android.util.Log
+import com.example.applicationlock.Constants
 import com.example.applicationlock.LockActivity
-import com.example.applicationlock.data.Prefs
+import com.example.applicationlock.data.LockedAppsRepo
+import com.example.applicationlock.security.LockState
 import com.example.applicationlock.security.PinGate
 
-/**
- * Foreground service that watches foreground apps and launches LockActivity for locked apps.
- * Requires USAGE_STATS permission to work (user must grant Usage Access).
- */
 class WatchdogService : Service() {
 
     private lateinit var handler: Handler
-    private lateinit var prefs: Prefs
+    private lateinit var repo: LockedAppsRepo
+    private var lastPkgLaunched: String? = null
+    private var lastLaunchAt: Long = 0L
+    private val LAUNCH_THROTTLE_MS = 900L
 
     override fun onCreate() {
         super.onCreate()
-        prefs = Prefs(this)
+        repo = LockedAppsRepo(this)
         handler = Handler(mainLooper)
         startForegroundIfNeeded()
         handler.post(checkTask)
     }
 
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        return START_STICKY
+    }
+
     @SuppressLint("ForegroundServiceType")
     private fun startForegroundIfNeeded() {
         val channelId = "applocker_channel"
-        val channelName = "App Locker Protection"
+        val nm = getSystemService(NotificationManager::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val manager = getSystemService(NotificationManager::class.java)
-            val channel = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_LOW)
-            manager.createNotificationChannel(channel)
-            val notification: Notification = Notification.Builder(this, channelId)
-                .setContentTitle("AppLock Protection")
-                .setContentText("Protection running")
-                .setSmallIcon(android.R.drawable.ic_lock_lock)
-                .build()
-            startForeground(1, notification)
-        } else {
-            val notification = Notification.Builder(this)
-                .setContentTitle("AppLock Protection")
-                .setContentText("Protection running")
-                .setSmallIcon(android.R.drawable.ic_lock_lock)
-                .build()
-            startForeground(1, notification)
+            val ch = NotificationChannel(channelId, "AppLocker", NotificationManager.IMPORTANCE_LOW)
+            nm.createNotificationChannel(ch)
         }
+        val n = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Notification.Builder(this, channelId)
+                .setContentTitle("AppLocker running")
+                .setContentText("Monitoring locked apps")
+                .setSmallIcon(android.R.drawable.ic_lock_lock)
+                .build()
+        } else {
+            @Suppress("DEPRECATION")
+            Notification.Builder(this)
+                .setContentTitle("AppLocker running")
+                .setContentText("Monitoring locked apps")
+                .setSmallIcon(android.R.drawable.ic_lock_lock)
+                .build()
+        }
+        startForeground(1, n)
     }
 
     private val checkTask = object : Runnable {
         override fun run() {
-            val current = getForegroundApp()
-            val locked = prefs.getLockedApps()
-            if (current != null && locked.contains(current)) {
-                if (!PinGate.isAppUnlocked(current)) {
-                    val intent = Intent(this@WatchdogService, LockActivity::class.java)
-                    intent.putExtra(LockActivity.EXTRA_TARGET_PKG, current)
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    startActivity(intent)
+            try {
+                val pkg = getForegroundPackage()
+                Log.d("WatchdogService", "foreground=$pkg lastLaunched=$lastPkgLaunched lockVisible=${LockState.lockActivityVisible}")
+
+                if (pkg == null) {
+                    // nothing
+                } else if (pkg == packageName) {
+                    if (lastPkgLaunched != null && repo.isLocked(lastPkgLaunched!!)) {
+                        PinGate.clear(lastPkgLaunched!!)
+                        lastPkgLaunched = null
+                    }
+                } else {
+                    if (repo.isLocked(pkg)) {
+                        if (lastPkgLaunched != null && lastPkgLaunched != pkg) {
+                            PinGate.clear(lastPkgLaunched!!)
+                        }
+                        val now = System.currentTimeMillis()
+                        if (!PinGate.isAppUnlocked(pkg) && !LockState.lockActivityVisible && now - lastLaunchAt > LAUNCH_THROTTLE_MS) {
+                            try {
+                                val i = Intent(this@WatchdogService, LockActivity::class.java)
+                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                                    .putExtra(Constants.EXTRA_TARGET_PKG, pkg)
+                                startActivity(i)
+                                lastLaunchAt = now
+                                lastPkgLaunched = pkg
+                            } catch (t: Throwable) {
+                                Log.w("WatchdogService", "failed to launch LockActivity", t)
+                            }
+                        }
+                    } else {
+                        if (lastPkgLaunched != null && repo.isLocked(lastPkgLaunched!!)) {
+                            PinGate.clear(lastPkgLaunched!!)
+                        }
+                        lastPkgLaunched = null
+                    }
                 }
-            }
-            handler.postDelayed(this, 1000)
+            } catch (t: Throwable) { Log.w("WatchdogService", "checkTask error", t) }
+            finally { handler.postDelayed(this, 1000) }
         }
     }
 
-    private fun getForegroundApp(): String? {
-        val usm = getSystemService(USAGE_STATS_SERVICE) as android.app.usage.UsageStatsManager
-        val end = System.currentTimeMillis()
-        val begin = end - 1000
-        val events = usm.queryEvents(begin, end)
-        val ev = android.app.usage.UsageEvents.Event()
-        var last: String? = null
-        while (events.hasNextEvent()) {
-            events.getNextEvent(ev)
-            if (ev.eventType == android.app.usage.UsageEvents.Event.MOVE_TO_FOREGROUND) {
-                last = ev.packageName
+    private fun getForegroundPackage(): String? {
+        return try {
+            val usm = getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+            val end = System.currentTimeMillis()
+            val begin = end - 2000
+            val events = usm.queryEvents(begin, end)
+            val ev = UsageEvents.Event()
+            var last: String? = null
+            while (events.hasNextEvent()) {
+                events.getNextEvent(ev)
+                if (ev.eventType == UsageEvents.Event.MOVE_TO_FOREGROUND) last = ev.packageName
             }
+            last
+        } catch (t: Throwable) {
+            Log.w("WatchdogService", "getForegroundPackage failed", t)
+            null
         }
-        return last
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        handler.removeCallbacks(checkTask)
     }
 
     override fun onBind(intent: Intent?): IBinder? = null

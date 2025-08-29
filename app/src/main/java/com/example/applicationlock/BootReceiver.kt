@@ -8,8 +8,8 @@ import com.example.applicationlock.service.WatchdogService
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
-            val serviceIntent = Intent(context, WatchdogService::class.java)
-            context.startForegroundService(serviceIntent)
+            val i = Intent(context, WatchdogService::class.java)
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) context.startForegroundService(i) else context.startService(i)
         }
     }
 }

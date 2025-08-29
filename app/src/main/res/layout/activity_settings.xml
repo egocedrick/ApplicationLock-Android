@@ -1,85 +1,120 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent" android:layout_height="match_parent"
-    android:padding="16dp">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    android:background="#121212">
 
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <EditText
-            android:id="@+id/editPin"
+        <Button
+            android:id="@+id/btn_set_app_pin"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="(not used) Set via buttons below"
-            android:inputType="numberPassword"/>
+            android:text="Set App PIN"
+            android:backgroundTint="#03DAC5"
+            android:textColor="#000000"/>
 
         <Button
-            android:id="@+id/btnSavePin"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Set App PIN (opens Set screen)"
-            android:layout_marginTop="8dp"/>
-
-        <Button
-            android:id="@+id/btnSetLockPin"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Set Lock PIN (for other apps)"
-            android:layout_marginTop="8dp"/>
-
-        <View android:layout_width="match_parent" android:layout_height="16dp"/>
-
-        <EditText
-            android:id="@+id/editPackage"
+            android:id="@+id/btn_set_lock_pin"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Package to lock (e.g. com.android.chrome)"/>
+            android:text="Set Lock PIN"
+            android:layout_marginTop="8dp"
+            android:backgroundTint="#03DAC5"
+            android:textColor="#000000"/>
+
+        <View android:layout_height="12dp" android:layout_width="match_parent"/>
+
+        <EditText
+            android:id="@+id/edit_package"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enter package name"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#AAAAAA"
+            android:backgroundTint="#FFFFFF"/>
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp">
+
+            <Button
+                android:id="@+id/btn_add_pkg"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Add"
+                android:backgroundTint="#03DAC5"
+                android:textColor="#000000"/>
+
+            <Button
+                android:id="@+id/btn_remove_pkg"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:text="Remove"
+                android:backgroundTint="#CF6679"
+                android:textColor="#FFFFFF"/>
+        </LinearLayout>
+
+        <View android:layout_height="16dp" android:layout_width="match_parent"/>
 
         <Button
-            android:id="@+id/btnAddPackage"
-            android:layout_width="wrap_content"
+            android:id="@+id/btn_usage_perm"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Add package to lock"
-            android:layout_marginTop="8dp"/>
-
-        <View android:layout_width="match_parent" android:layout_height="16dp"/>
+            android:text="Grant Usage Permission"
+            android:backgroundTint="#03DAC5"
+            android:textColor="#000000"/>
 
         <Button
-            android:id="@+id/btnUsage"
-            android:layout_width="wrap_content"
+            android:id="@+id/btn_overlay_perm"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Open Usage Access"/>
+            android:text="Grant Overlay Permission"
+            android:layout_marginTop="8dp"
+            android:backgroundTint="#03DAC5"
+            android:textColor="#000000"/>
 
-        <Button
-            android:id="@+id/btnOverlay"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Open Overlay Settings"
-            android:layout_marginTop="8dp"/>
+        <View android:layout_height="12dp" android:layout_width="match_parent"/>
 
-        <View android:layout_width="match_parent" android:layout_height="16dp"/>
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
-        <Button
-            android:id="@+id/btnStart"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Start Protection"
-            android:layout_marginTop="16dp" />
+            <Button
+                android:id="@+id/btn_start"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Start Protection"
+                android:backgroundTint="#03DAC5"
+                android:textColor="#000000"/>
 
-        <Button
-            android:id="@+id/btnStop"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Stop Protection"
-            android:layout_marginTop="8dp" />
+            <Button
+                android:id="@+id/btn_stop"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:text="Stop Protection"
+                android:backgroundTint="#CF6679"
+                android:textColor="#FFFFFF"/>
+        </LinearLayout>
 
         <TextView
-            android:id="@+id/txtStatus"
+            android:id="@+id/txt_status"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingTop="12dp"/>
-
+            android:paddingTop="12dp"
+            android:textColor="#FFFFFF"/>
     </LinearLayout>
 </ScrollView>
