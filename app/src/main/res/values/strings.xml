@@ -1,10 +1,7 @@
 <resources>
-    <string name="app_name">App Locker</string>
-    <string name="enter_pin">Enter PIN</string>
+    <string name="app_name">Application Lock</string>
     <string name="pin_invalid">PIN must be 4–8 digits</string>
     <string name="pin_saved">PIN saved</string>
     <string name="wrong_pin">Wrong PIN</string>
     <string name="locked_too_many">Too many wrong attempts. Locked.</string>
-    <string name="btn_submit">Unlock</string>
-    <string name="btn_confirm">Save PIN</string>
 </resources>

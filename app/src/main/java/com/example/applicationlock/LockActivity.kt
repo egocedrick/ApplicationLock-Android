@@ -11,7 +11,6 @@ import android.widget.Toast
 import com.example.applicationlock.data.PinStore
 import com.example.applicationlock.security.AttemptLimiter
 import com.example.applicationlock.security.LockState
-import com.example.applicationlock.security.PinGate
 
 class LockActivity : Activity() {
 
@@ -25,24 +24,19 @@ class LockActivity : Activity() {
     @SuppressLint("InflateParams")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        targetPkg = intent.getStringExtra(Constants.EXTRA_TARGET_PKG) ?: packageName
-        pinStore = PinStore(this)
-        limiter = AttemptLimiter(this, targetPkg)
-
         setContentView(R.layout.activity_lock)
+
         pinInput = findViewById(R.id.edit_pin_input)
         submit = findViewById(R.id.btn_unlock)
         status = findViewById(R.id.txt_lock_message)
 
+        pinStore = PinStore(this)
+        targetPkg = intent.getStringExtra(Constants.EXTRA_TARGET_PKG) ?: packageName
+        limiter = AttemptLimiter(this, targetPkg)
+
         if (limiter.isLockedOut()) {
             status.text = "Too many wrong attempts. Locked."
             submit.isEnabled = false
-            return
-        }
-
-        if (targetPkg != packageName && PinGate.isAppUnlocked(targetPkg)) {
-            finish()
             return
         }
 
@@ -55,10 +49,13 @@ class LockActivity : Activity() {
             if (ok) {
                 limiter.reset()
                 if (targetPkg == packageName) {
-                    try { startActivity(Intent(this, SettingsActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) } catch (_: Exception) {}
-                } else {
-                    PinGate.unlockForSession(targetPkg)
+                    // unlocked app itself -> open settings
+                    try {
+                        startActivity(Intent(this, SettingsActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                    } catch (_: Exception) {}
                 }
+                // IMPORTANT: do NOT persist an "unlocked" session for third-party app.
+                // We simply finish and let the user continue to the app. Re-opening will ask again.
                 finish()
             } else {
                 limiter.registerFailure()

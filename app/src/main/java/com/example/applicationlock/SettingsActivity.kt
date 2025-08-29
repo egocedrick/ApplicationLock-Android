@@ -14,7 +14,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.applicationlock.data.LockedAppsRepo
 import com.example.applicationlock.data.PinStore
-import com.example.applicationlock.service.WatchdogService
+import com.example.applicationlock.service.AppLockService
 
 class SettingsActivity : AppCompatActivity() {
 
@@ -79,12 +79,10 @@ class SettingsActivity : AppCompatActivity() {
 
         btnOverlay.setOnClickListener {
             try {
-                // Primary: open overlay management page for this package
                 val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 startActivity(intent)
             } catch (e: Exception) {
-                // Fallback: open general overlay settings
                 try {
                     startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION))
                 } catch (ex: Exception) {
@@ -99,19 +97,17 @@ class SettingsActivity : AppCompatActivity() {
                 startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
                 return@setOnClickListener
             }
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(Intent(this, WatchdogService::class.java))
-            else startService(Intent(this, WatchdogService::class.java))
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(Intent(this, AppLockService::class.java))
+            else startService(Intent(this, AppLockService::class.java))
             txtStatus.text = "Protection started"
         }
 
         btnStop.setOnClickListener {
-            stopService(Intent(this, WatchdogService::class.java))
+            stopService(Intent(this, AppLockService::class.java))
             txtStatus.text = "Protection stopped"
         }
 
-        // initial status
-        txtStatus.text = if (isServiceRunning()) "Service: running" else "Service: stopped"
+        txtStatus.text = "Locked apps: ${repo.getLocked().joinToString(", ")}"
     }
 
     private fun hasUsageStatsPermission(): Boolean {
@@ -122,11 +118,5 @@ class SettingsActivity : AppCompatActivity() {
             packageName
         )
         return mode == AppOpsManager.MODE_ALLOWED
-    }
-
-    private fun isServiceRunning(): Boolean {
-        // lightweight check: if watchdog started by user, we rely on txtStatus updates
-        // you could implement a static flag in the service if you want a precise check
-        return false
     }
 }

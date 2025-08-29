@@ -16,7 +16,7 @@ class Prefs(context: Context) {
         private const val DEFAULT_ATTEMPTS = 3
     }
 
-    // App PIN
+    // App PIN (ApplicationLock)
     fun isAppPinSet(): Boolean = prefs.contains(KEY_APP_PIN)
     fun saveAppPin(pin: String) = prefs.edit().putString(KEY_APP_PIN, pin).apply()
     fun getAppPin(): String? = prefs.getString(KEY_APP_PIN, null)
@@ -46,7 +46,7 @@ class Prefs(context: Context) {
 
     fun isAppLocked(pkg: String?): Boolean = pkg != null && getLockedApps().contains(pkg)
 
-    // Attempt limiter
+    // Attempt limiter API (per-scope)
     fun getAttemptsLeft(scope: String): Int =
         prefs.getInt(KEY_ATTEMPTS_PREFIX + scope, DEFAULT_ATTEMPTS)
 

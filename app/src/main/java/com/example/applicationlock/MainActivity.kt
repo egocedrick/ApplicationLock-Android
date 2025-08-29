@@ -13,7 +13,7 @@ class MainActivity : AppCompatActivity() {
         if (!pinStore.isAppPinSet()) {
             startActivity(Intent(this, AppPinActivity::class.java).putExtra(Constants.EXTRA_SET_FOR, "app"))
         } else {
-            // require PIN on app start
+            // show lock screen for app itself on each startup
             startActivity(Intent(this, LockActivity::class.java).putExtra(Constants.EXTRA_TARGET_PKG, packageName))
         }
         finish()
