@@ -2,8 +2,6 @@ package com.example.applicationlock.service
 
 import android.annotation.SuppressLint
 import android.app.AlarmManager
-import android.app.Notification
-import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
@@ -19,8 +17,8 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.applicationlock.Constants
 import com.example.applicationlock.LockActivity
-import com.example.applicationlock.R
 import com.example.applicationlock.data.LockedAppsRepo
+import com.example.applicationlock.security.PinGate
 
 class AppLockService : Service() {
 
@@ -65,22 +63,32 @@ class AppLockService : Service() {
             try {
                 val pkg = getForegroundPackage()
 
-                // If user moved away from previously foreground app, mark prevForeground cleared (so reopen will prompt)
+                // If previously unlocked app (session) and user left it, clear the session unlock
                 if (prevForeground != null && prevForeground != pkg) {
-                    // nothing else needed; we rely on always prompting on foreground
+                    // clear unlocked session for the previous foreground app
+                    try {
+                        PinGate.clear(prevForeground!!)
+                        Log.d(TAG, "Cleared session unlock for $prevForeground")
+                    } catch (_: Throwable) {}
                 }
+
                 prevForeground = pkg
 
                 if (pkg != null && pkg != packageName && repo.isLocked(pkg)) {
-                    val now = System.currentTimeMillis()
-                    val last = lastPromptTime[pkg] ?: 0L
-                    if (now - last > DEBOUNCE_MS) {
-                        lastPromptTime[pkg] = now
-                        val i = Intent(this@AppLockService, LockActivity::class.java)
-                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                            .putExtra(Constants.EXTRA_TARGET_PKG, pkg)
-                        startActivity(i)
-                        Log.d(TAG, "LockActivity launched for $pkg")
+                    // If the app is already unlocked for this session, don't relaunch LockActivity.
+                    if (PinGate.isAppUnlocked(pkg)) {
+                        Log.d(TAG, "Package $pkg is unlocked for session — skipping lock")
+                    } else {
+                        val now = System.currentTimeMillis()
+                        val last = lastPromptTime[pkg] ?: 0L
+                        if (now - last > DEBOUNCE_MS) {
+                            lastPromptTime[pkg] = now
+                            val i = Intent(this@AppLockService, LockActivity::class.java)
+                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                .putExtra(Constants.EXTRA_TARGET_PKG, pkg)
+                            startActivity(i)
+                            Log.d(TAG, "LockActivity launched for $pkg")
+                        }
                     }
                 }
             } catch (t: Throwable) {
@@ -107,7 +115,7 @@ class AppLockService : Service() {
             }
             return last
         } catch (t: Throwable) {
-            Log.w(TAG, "UsageStats query failed — grant Usage Access", t)
+            Log.w(TAG, "UsageStats query failed — have you granted Usage Access?", t)
             return null
         }
     }
@@ -115,7 +123,7 @@ class AppLockService : Service() {
     private fun createChannelIfNeeded() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val nm = getSystemService(NotificationManager::class.java)
-            val ch = NotificationChannel(CHANNEL_ID, "App Lock Service", NotificationManager.IMPORTANCE_LOW)
+            val ch = android.app.NotificationChannel(CHANNEL_ID, "App Lock Service", NotificationManager.IMPORTANCE_LOW)
             nm?.createNotificationChannel(ch)
         }
     }
@@ -129,7 +137,7 @@ class AppLockService : Service() {
             .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
 
-        val notif: Notification = builder.build()
+        val notif = builder.build()
         startForeground(NOTIF_ID, notif)
     }
 
@@ -157,8 +165,8 @@ class AppLockService : Service() {
 
     override fun onDestroy() {
         try { handler.removeCallbacksAndMessages(null) } catch (_: Throwable) {}
-        super.onDestroy()
         Log.d(TAG, "AppLockService destroyed")
+        super.onDestroy()
     }
 
     override fun onBind(intent: Intent?): IBinder? = null

@@ -1,7 +1,7 @@
 package com.example.applicationlock.security
 
 /**
- * Session-level unlock tracker. Kept for API compatibility but NOT used to persist across app closings.
+ * Session-level unlock tracker. Kept for compatibility but not used to persist unlocks across app closes.
  */
 object PinGate {
     private val unlocked = mutableSetOf<String>()

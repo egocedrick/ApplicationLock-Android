@@ -13,6 +13,9 @@ import com.example.applicationlock.data.LockedAppsRepo
 import com.example.applicationlock.data.PinStore
 import com.example.applicationlock.service.AppLockService
 
+/**
+ * Simple UI for setting pins and adding/removing locked package names.
+ */
 class SettingsActivity : AppCompatActivity() {
 
     private lateinit var repo: LockedAppsRepo
@@ -56,7 +59,7 @@ class SettingsActivity : AppCompatActivity() {
         btnRemove.setOnClickListener {
             val p = editPkg.text.toString().trim()
             if (p.isNotEmpty()) {
-                repo.remove(p)
+                repo.remove(p) // removal clears attempts for that pkg
                 txtStatus.text = "Unlocked: $p"
             }
         }
@@ -73,17 +76,20 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         btnStart.setOnClickListener {
+            // reset attempts when starting protection (fresh start)
             repo.resetAllAttempts()
+            val svc = Intent(this, AppLockService::class.java)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                startForegroundService(Intent(this, AppLockService::class.java))
+                startForegroundService(svc)
             } else {
-                startService(Intent(this, AppLockService::class.java))
+                startService(svc)
             }
             txtStatus.text = "Protection started"
         }
 
         btnStop.setOnClickListener {
             stopService(Intent(this, AppLockService::class.java))
+            // clear attempts when stopping protection
             repo.resetAllAttempts()
             txtStatus.text = "Protection stopped"
         }

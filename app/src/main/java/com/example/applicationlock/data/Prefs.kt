@@ -28,15 +28,18 @@ class Prefs(context: Context) {
     fun getAppPin(): String? = prefs.getString(KEY_APP_PIN, null)
     fun clearAppPin() = prefs.edit().remove(KEY_APP_PIN).apply()
 
-    // Lock PIN (for other apps - universal)
+    // Lock PIN (for other apps)
     fun isLockPinSet(): Boolean = prefs.contains(KEY_LOCK_PIN)
     fun saveLockPin(pin: String) = prefs.edit().putString(KEY_LOCK_PIN, pin).apply()
     fun getLockPin(): String? = prefs.getString(KEY_LOCK_PIN, null)
     fun clearLockPin() = prefs.edit().remove(KEY_LOCK_PIN).apply()
 
     // Locked apps list
-    fun getLockedApps(): MutableSet<String> =
-        prefs.getStringSet(KEY_LOCKED_APPS, null)?.toMutableSet() ?: mutableSetOf()
+    fun getLockedApps(): MutableSet<String> {
+        // return a mutable set copy to avoid SharedPreferences returning internal set
+        val set = prefs.getStringSet(KEY_LOCKED_APPS, null)
+        return (set?.toMutableSet() ?: mutableSetOf())
+    }
 
     fun addLockedApp(pkg: String) {
         val set = getLockedApps()
@@ -81,6 +84,7 @@ class Prefs(context: Context) {
             editor.putInt(KEY_ATTEMPTS_PREFIX + s, DEFAULT_ATTEMPTS)
             editor.putBoolean(KEY_GATED_PREFIX + s, false)
         }
+        // ensure app itself is reset too
         editor.putInt(KEY_ATTEMPTS_PREFIX + packageName, DEFAULT_ATTEMPTS)
         editor.apply()
     }

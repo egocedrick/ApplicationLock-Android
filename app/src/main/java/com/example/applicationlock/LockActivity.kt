@@ -11,6 +11,7 @@ import android.widget.Toast
 import com.example.applicationlock.data.LockedAppsRepo
 import com.example.applicationlock.data.PinStore
 import com.example.applicationlock.security.AttemptLimiter
+import com.example.applicationlock.security.PinGate
 
 class LockActivity : Activity() {
 
@@ -36,22 +37,32 @@ class LockActivity : Activity() {
         targetPkg = intent.getStringExtra(Constants.EXTRA_TARGET_PKG) ?: packageName
         limiter = AttemptLimiter(this, targetPkg)
 
+        // If gate locked for scope -> block
         if (limiter.isLockedOut()) {
             status.text = getString(R.string.locked_too_many)
             submit.isEnabled = false
             return
         }
 
+        // Show correct prompt text
         status.text = if (targetPkg == packageName) getString(R.string.enter_app_pin) else getString(R.string.enter_lock_pin)
 
         submit.setOnClickListener {
             val entered = pinInput.text.toString()
-            val ok = if (targetPkg == packageName) pinStore.verifyAppPin(entered) else pinStore.verifyLockPin(entered)
+            val ok = if (targetPkg == packageName) {
+                pinStore.verifyAppPin(entered)
+            } else {
+                pinStore.verifyLockPin(entered)
+            }
 
             if (ok) {
                 limiter.reset()
                 if (targetPkg == packageName) {
+                    // unlocked app itself -> open settings
                     startActivity(Intent(this, SettingsActivity::class.java))
+                } else {
+                    // unlock third-party app for session so reopening while in-app won't re-prompt
+                    PinGate.unlockForSession(targetPkg)
                 }
                 finish()
             } else {

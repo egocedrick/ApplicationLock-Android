@@ -8,6 +8,9 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.applicationlock.data.PinStore
 
+/**
+ * Set PIN screen. Use extra Constants.EXTRA_SET_FOR: "app" or "lock".
+ */
 class AppPinActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {

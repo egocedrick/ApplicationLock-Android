@@ -1,14 +1,23 @@
 package com.example.applicationlock.data
 
+import android.content.Context
+
 /**
  * Thin wrapper around Prefs for the locked-apps domain.
  */
-class LockedAppsRepo(context: android.content.Context) {
+class LockedAppsRepo(context: Context) {
     private val prefs = Prefs(context)
 
     fun add(pkg: String) = prefs.addLockedApp(pkg)
-    fun remove(pkg: String) = prefs.removeLockedApp(pkg)
+
+    fun remove(pkg: String) {
+        prefs.removeLockedApp(pkg)
+        // clear attempts for this package
+        prefs.resetAttempts(pkg)
+    }
+
     fun getLocked(): Set<String> = prefs.getLockedApps()
     fun isLocked(pkg: String?): Boolean = pkg != null && prefs.isAppLocked(pkg)
+
     fun resetAllAttempts() = prefs.resetAllAttempts()
 }
