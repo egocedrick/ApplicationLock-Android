@@ -15,7 +15,7 @@ class AppPinActivity : AppCompatActivity() {
         setContentView(R.layout.activity_app_pin)
 
         val edit = findViewById<EditText>(R.id.edit_pin)
-        val btn = findViewById<Button>(R.id.btn_save_pin)
+        val btn = findViewById<Button>(R.id.btn_confirm_pin)
         val pinStore = PinStore(this)
 
         val setFor = intent.getStringExtra(Constants.EXTRA_SET_FOR) ?: "app"

@@ -15,15 +15,13 @@
         android:inputType="numberPassword"
         android:textColor="#FFFFFF"
         android:textColorHint="#AAAAAA"
-        android:backgroundTint="#03DAC5"
+        android:backgroundTint="#FFFFFF"
         android:maxLength="8"/>
 
     <Button
-        android:id="@+id/btn_save_pin"
+        android:id="@+id/btn_confirm_pin"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Save PIN"
-        android:layout_marginTop="16dp"
-        android:backgroundTint="#03DAC5"
-        android:textColor="#000000"/>
+        android:layout_marginTop="16dp"/>
 </LinearLayout>

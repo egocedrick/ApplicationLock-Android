@@ -8,9 +8,9 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import com.example.applicationlock.data.LockedAppsRepo
 import com.example.applicationlock.data.PinStore
 import com.example.applicationlock.security.AttemptLimiter
-import com.example.applicationlock.security.LockState
 
 class LockActivity : Activity() {
 
@@ -18,29 +18,31 @@ class LockActivity : Activity() {
     private lateinit var submit: Button
     private lateinit var status: TextView
     private lateinit var pinStore: PinStore
+    private lateinit var repo: LockedAppsRepo
     private lateinit var limiter: AttemptLimiter
     private var targetPkg: String = ""
 
-    @SuppressLint("InflateParams")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_lock)
 
-        pinInput = findViewById(R.id.edit_pin_input)
-        submit = findViewById(R.id.btn_unlock)
-        status = findViewById(R.id.txt_lock_message)
+        pinInput = findViewById(R.id.pin_input)
+        submit = findViewById(R.id.submit_button)
+        status = findViewById(R.id.status_text)
 
         pinStore = PinStore(this)
+        repo = LockedAppsRepo(this)
+
         targetPkg = intent.getStringExtra(Constants.EXTRA_TARGET_PKG) ?: packageName
         limiter = AttemptLimiter(this, targetPkg)
 
         if (limiter.isLockedOut()) {
-            status.text = "Too many wrong attempts. Locked."
+            status.text = getString(R.string.locked_too_many)
             submit.isEnabled = false
             return
         }
 
-        status.text = if (targetPkg == packageName) "Enter App PIN" else "Enter Lock PIN"
+        status.text = if (targetPkg == packageName) getString(R.string.enter_app_pin) else getString(R.string.enter_lock_pin)
 
         submit.setOnClickListener {
             val entered = pinInput.text.toString()
@@ -49,46 +51,26 @@ class LockActivity : Activity() {
             if (ok) {
                 limiter.reset()
                 if (targetPkg == packageName) {
-                    // unlocked app itself -> open settings
-                    try {
-                        startActivity(Intent(this, SettingsActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-                    } catch (_: Exception) {}
+                    startActivity(Intent(this, SettingsActivity::class.java))
                 }
-                // IMPORTANT: do NOT persist an "unlocked" session for third-party app.
-                // We simply finish and let the user continue to the app. Re-opening will ask again.
                 finish()
             } else {
                 limiter.registerFailure()
                 val rem = limiter.remainingAttempts()
                 if (limiter.isLockedOut()) {
-                    status.text = "Too many wrong attempts. Locked."
+                    status.text = getString(R.string.locked_too_many)
                     submit.isEnabled = false
-                    Toast.makeText(this, "Too many wrong attempts. Locked.", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, getString(R.string.locked_too_many), Toast.LENGTH_LONG).show()
                 } else {
-                    status.text = "Wrong PIN ($rem)"
-                    Toast.makeText(this, "Wrong PIN", Toast.LENGTH_SHORT).show()
+                    status.text = getString(R.string.wrong_pin) + " (" + rem + ")"
+                    Toast.makeText(this, getString(R.string.wrong_pin), Toast.LENGTH_SHORT).show()
                 }
             }
         }
     }
 
-    override fun onStart() {
-        super.onStart()
-        LockState.lockActivityVisible = true
-    }
-
-    override fun onStop() {
-        super.onStop()
-        LockState.lockActivityVisible = false
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        LockState.lockActivityVisible = false
-    }
-
-    @SuppressLint("GestureBackNavigation")
     @Deprecated("Deprecated in Java")
+    @SuppressLint("GestureBackNavigation")
     override fun onBackPressed() {
         // prevent bypass
     }

@@ -1,7 +1,5 @@
 package com.example.applicationlock
 
-import android.app.AppOpsManager
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -10,7 +8,6 @@ import android.provider.Settings
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.applicationlock.data.LockedAppsRepo
 import com.example.applicationlock.data.PinStore
@@ -34,6 +31,7 @@ class SettingsActivity : AppCompatActivity() {
         val btnAdd = findViewById<Button>(R.id.btn_add_pkg)
         val btnRemove = findViewById<Button>(R.id.btn_remove_pkg)
         val txtStatus = findViewById<TextView>(R.id.txt_status)
+
         val btnUsage = findViewById<Button>(R.id.btn_usage_perm)
         val btnOverlay = findViewById<Button>(R.id.btn_overlay_perm)
         val btnStart = findViewById<Button>(R.id.btn_start)
@@ -52,8 +50,6 @@ class SettingsActivity : AppCompatActivity() {
             if (p.isNotEmpty()) {
                 repo.add(p)
                 txtStatus.text = "Locked: $p"
-            } else {
-                Toast.makeText(this, "Enter package", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -62,61 +58,34 @@ class SettingsActivity : AppCompatActivity() {
             if (p.isNotEmpty()) {
                 repo.remove(p)
                 txtStatus.text = "Unlocked: $p"
-            } else {
-                Toast.makeText(this, "Enter package", Toast.LENGTH_SHORT).show()
             }
         }
 
         btnUsage.setOnClickListener {
-            try {
-                val i = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
-                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                startActivity(i)
-            } catch (e: Exception) {
-                Toast.makeText(this, "Unable to open usage settings", Toast.LENGTH_SHORT).show()
-            }
+            startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
         }
 
         btnOverlay.setOnClickListener {
-            try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 startActivity(intent)
-            } catch (e: Exception) {
-                try {
-                    startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION))
-                } catch (ex: Exception) {
-                    Toast.makeText(this, "Unable to open overlay settings", Toast.LENGTH_SHORT).show()
-                }
             }
         }
 
         btnStart.setOnClickListener {
-            if (!hasUsageStatsPermission()) {
-                Toast.makeText(this, "Grant Usage Access first", Toast.LENGTH_SHORT).show()
-                startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
-                return@setOnClickListener
+            repo.resetAllAttempts()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(Intent(this, AppLockService::class.java))
+            } else {
+                startService(Intent(this, AppLockService::class.java))
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(Intent(this, AppLockService::class.java))
-            else startService(Intent(this, AppLockService::class.java))
             txtStatus.text = "Protection started"
         }
 
         btnStop.setOnClickListener {
             stopService(Intent(this, AppLockService::class.java))
+            repo.resetAllAttempts()
             txtStatus.text = "Protection stopped"
         }
-
-        txtStatus.text = "Locked apps: ${repo.getLocked().joinToString(", ")}"
-    }
-
-    private fun hasUsageStatsPermission(): Boolean {
-        val appOps = getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
-        val mode = appOps.checkOpNoThrow(
-            AppOpsManager.OPSTR_GET_USAGE_STATS,
-            android.os.Process.myUid(),
-            packageName
-        )
-        return mode == AppOpsManager.MODE_ALLOWED
     }
 }

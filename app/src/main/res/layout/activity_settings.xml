@@ -21,7 +21,7 @@
             android:id="@+id/btn_set_lock_pin"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Set Lock PIN"
+            android:text="Set Lock PIN (other apps)"
             android:layout_marginTop="8dp"
             android:backgroundTint="#03DAC5"
             android:textColor="#000000"/>
@@ -32,7 +32,7 @@
             android:id="@+id/edit_package"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Enter package name"
+            android:hint="Package to lock (e.g. com.android.chrome)"
             android:textColor="#FFFFFF"
             android:textColorHint="#AAAAAA"
             android:backgroundTint="#FFFFFF"/>
@@ -69,7 +69,7 @@
             android:id="@+id/btn_usage_perm"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Grant Usage Permission"
+            android:text="Open Usage Access"
             android:backgroundTint="#03DAC5"
             android:textColor="#000000"/>
 
@@ -77,7 +77,7 @@
             android:id="@+id/btn_overlay_perm"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Grant Overlay Permission"
+            android:text="Open Overlay Permission"
             android:layout_marginTop="8dp"
             android:backgroundTint="#03DAC5"
             android:textColor="#000000"/>

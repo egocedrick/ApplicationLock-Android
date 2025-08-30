@@ -4,34 +4,33 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center"
-    android:background="#121212"
-    android:padding="24dp">
+    android:padding="24dp"
+    android:background="#121212">
 
     <TextView
-        android:id="@+id/txt_lock_message"
+        android:id="@+id/status_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Enter PIN to unlock"
+        android:text="Enter PIN"
         android:textColor="#FFFFFF"
         android:textSize="18sp"
-        android:layout_marginBottom="16dp"/>
+        android:paddingBottom="16dp"/>
 
     <EditText
-        android:id="@+id/edit_pin_input"
+        android:id="@+id/pin_input"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Enter PIN"
         android:inputType="numberPassword"
         android:textColor="#FFFFFF"
         android:textColorHint="#AAAAAA"
-        android:backgroundTint="#03DAC5"
-        android:layout_marginBottom="20dp"/>
+        android:backgroundTint="#FFFFFF"
+        android:maxLength="8"/>
 
     <Button
-        android:id="@+id/btn_unlock"
+        android:id="@+id/submit_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Unlock"
-        android:backgroundTint="#03DAC5"
-        android:textColor="#000000"/>
+        android:layout_marginTop="16dp"/>
 </LinearLayout>

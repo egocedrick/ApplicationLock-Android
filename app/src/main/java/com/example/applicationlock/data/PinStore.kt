@@ -2,6 +2,9 @@ package com.example.applicationlock.data
 
 import android.content.Context
 
+/**
+ * Helper exposing app/lock PIN checks (delegates to Prefs).
+ */
 class PinStore(context: Context) {
     private val prefs = Prefs(context)
 
