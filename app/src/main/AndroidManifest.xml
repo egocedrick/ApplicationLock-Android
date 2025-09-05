@@ -1,12 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.applicationlock">
+    package="com.example.applicationlock"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
-    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"
-        tools:ignore="ProtectedPermissions" xmlns:tools="http://schemas.android.com/tools"/>
+    <uses-permission
+        android:name="android.permission.PACKAGE_USAGE_STATS"
+        tools:ignore="ProtectedPermissions"/>
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+    <uses-permission android:name="android.permission.BIND_DEVICE_ADMIN"
+        tools:ignore="ProtectedPermissions" />
+
 
     <application
         android:allowBackup="true"
@@ -22,13 +27,16 @@
 
         <activity android:name=".SettingsActivity" android:exported="true"/>
         <activity android:name=".AppPinActivity" android:exported="false"/>
-        <activity android:name=".LockActivity"
+        <activity
+            android:name=".LockActivity"
             android:excludeFromRecents="true"
             android:taskAffinity=""
             android:noHistory="true"
             android:exported="false" />
 
         <service android:name=".service.AppLockService" android:exported="false"/>
+        <!-- If you want WatchdogService in manifest too (optional if used) -->
+        <service android:name=".service.WatchdogService" android:exported="false"/>
 
         <receiver android:name=".BootReceiver" android:enabled="true" android:exported="true">
             <intent-filter>
@@ -36,7 +44,18 @@
             </intent-filter>
         </receiver>
 
-        <receiver android:name=".MyDeviceAdminReceiver" android:exported="false" />
+        <receiver
+            android:name=".MyDeviceAdminReceiver"
+            android:permission="android.permission.BIND_DEVICE_ADMIN"
+            android:exported="false">
+            <meta-data
+                android:name="android.app.device_admin"
+                android:resource="@xml/device_admin_receiver" />
+            <intent-filter>
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+            </intent-filter>
+        </receiver>
+
 
     </application>
 </manifest>

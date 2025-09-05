@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
@@ -48,20 +49,37 @@ class WatchdogService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val ch = NotificationChannel(channelId, "AppLocker", NotificationManager.IMPORTANCE_LOW)
             nm.createNotificationChannel(ch)
-            val n = Notification.Builder(this, channelId)
-                .setContentTitle("AppLocker running")
-                .setContentText("Monitoring locked apps")
-                .setSmallIcon(android.R.drawable.ic_lock_lock)
-                .build()
-            startForeground(1, n)
-        } else {
-            val n = Notification.Builder(this)
-                .setContentTitle("AppLocker running")
-                .setContentText("Monitoring locked apps")
-                .setSmallIcon(android.R.drawable.ic_lock_lock)
-                .build()
-            startForeground(1, n)
         }
+
+        // Tap → LockActivity for the app itself (with entryPoint)
+        val lockIntent = Intent(this, LockActivity::class.java)
+            .putExtra(Constants.EXTRA_TARGET_PKG, packageName)
+            .putExtra(Constants.EXTRA_ENTRY_POINT, "notification")
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+
+        val contentPending = PendingIntent.getActivity(
+            this, 0, lockIntent,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            else
+                PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val notifBuilder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Notification.Builder(this, channelId)
+        } else {
+            Notification.Builder(this)
+        }
+
+        val n = notifBuilder
+            .setContentTitle("AppLocker running")
+            .setContentText("Monitoring locked apps")
+            .setSmallIcon(android.R.drawable.ic_lock_lock)
+            .setContentIntent(contentPending) // added tap → PIN → UI
+            .setOngoing(true)
+            .build()
+
+        startForeground(1, n)
     }
 
     private val checkTask = object : Runnable {
@@ -89,7 +107,7 @@ class WatchdogService : Service() {
                         .putExtra(Constants.EXTRA_TARGET_PKG, pkg)
                     startActivity(i)
                 }
-            } catch (t: Throwable) {
+            } catch (_: Throwable) {
                 // ignore
             } finally {
                 handler.postDelayed(this, 900L)

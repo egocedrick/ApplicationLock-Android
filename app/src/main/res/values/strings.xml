@@ -6,4 +6,5 @@
     <string name="locked_too_many">Too many wrong attempts. Locked.</string>
     <string name="enter_lock_pin">Enter Lock Pin</string>
     <string name="enter_app_pin">Enter App Pin</string>
+    <string name="btn_enable_admin">Enable Admin</string>
 </resources>

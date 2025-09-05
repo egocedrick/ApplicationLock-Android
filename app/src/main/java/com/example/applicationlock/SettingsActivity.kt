@@ -1,5 +1,8 @@
 package com.example.applicationlock
 
+import android.annotation.SuppressLint
+import android.app.admin.DevicePolicyManager
+import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -8,6 +11,7 @@ import android.provider.Settings
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.applicationlock.data.LockedAppsRepo
 import com.example.applicationlock.data.PinStore
@@ -21,6 +25,7 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var repo: LockedAppsRepo
     private lateinit var pinStore: PinStore
 
+    @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
@@ -37,6 +42,8 @@ class SettingsActivity : AppCompatActivity() {
 
         val btnUsage = findViewById<Button>(R.id.btn_usage_perm)
         val btnOverlay = findViewById<Button>(R.id.btn_overlay_perm)
+        val btnEnableAdmin = findViewById<Button>(R.id.btn_enable_admin)
+        val btnDisableAdmin = findViewById<Button>(R.id.btn_disable_admin) // optional kung nasa layout
         val btnStart = findViewById<Button>(R.id.btn_start)
         val btnStop = findViewById<Button>(R.id.btn_stop)
 
@@ -75,8 +82,36 @@ class SettingsActivity : AppCompatActivity() {
             }
         }
 
+        // Enable Device Admin
+        btnEnableAdmin.setOnClickListener {
+            val compName = ComponentName(this, MyDeviceAdminReceiver::class.java)
+            val dpm = getSystemService(DEVICE_POLICY_SERVICE) as DevicePolicyManager
+            if (dpm.isAdminActive(compName)) {
+                Toast.makeText(this, "Device Admin already enabled", Toast.LENGTH_SHORT).show()
+            } else {
+                val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN)
+                intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, compName)
+                intent.putExtra(
+                    DevicePolicyManager.EXTRA_ADD_EXPLANATION,
+                    "Enable Device Admin to prevent unauthorized uninstall."
+                )
+                startActivity(intent)
+            }
+        }
+
+        // Disable Device Admin (optional)
+        btnDisableAdmin?.setOnClickListener {
+            val compName = ComponentName(this, MyDeviceAdminReceiver::class.java)
+            val dpm = getSystemService(DEVICE_POLICY_SERVICE) as DevicePolicyManager
+            if (dpm.isAdminActive(compName)) {
+                dpm.removeActiveAdmin(compName)
+                Toast.makeText(this, "Device Admin disabled", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Device Admin not active", Toast.LENGTH_SHORT).show()
+            }
+        }
+
         btnStart.setOnClickListener {
-            // reset attempts when starting protection (fresh start)
             repo.resetAllAttempts()
             val svc = Intent(this, AppLockService::class.java)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -84,13 +119,20 @@ class SettingsActivity : AppCompatActivity() {
             } else {
                 startService(svc)
             }
+            getSharedPreferences("app_lock_prefs", MODE_PRIVATE)
+                .edit()
+                .putBoolean("protection_enabled", true)
+                .apply()
             txtStatus.text = "Protection started"
         }
 
         btnStop.setOnClickListener {
             stopService(Intent(this, AppLockService::class.java))
-            // clear attempts when stopping protection
             repo.resetAllAttempts()
+            getSharedPreferences("app_lock_prefs", MODE_PRIVATE)
+                .edit()
+                .putBoolean("protection_enabled", false)
+                .apply()
             txtStatus.text = "Protection stopped"
         }
     }

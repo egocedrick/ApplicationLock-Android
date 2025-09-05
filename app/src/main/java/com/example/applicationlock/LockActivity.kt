@@ -10,6 +10,7 @@ import android.widget.TextView
 import android.widget.Toast
 import com.example.applicationlock.data.LockedAppsRepo
 import com.example.applicationlock.data.PinStore
+import com.example.applicationlock.data.Prefs
 import com.example.applicationlock.security.AttemptLimiter
 import com.example.applicationlock.security.PinGate
 
@@ -22,6 +23,7 @@ class LockActivity : Activity() {
     private lateinit var repo: LockedAppsRepo
     private lateinit var limiter: AttemptLimiter
     private var targetPkg: String = ""
+    private var entryPoint: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,12 +37,37 @@ class LockActivity : Activity() {
         repo = LockedAppsRepo(this)
 
         targetPkg = intent.getStringExtra(Constants.EXTRA_TARGET_PKG) ?: packageName
+        entryPoint = intent.getStringExtra(Constants.EXTRA_ENTRY_POINT)
         limiter = AttemptLimiter(this, targetPkg)
 
         // If gate locked for scope -> block
         if (limiter.isLockedOut()) {
-            status.text = getString(R.string.locked_too_many)
-            submit.isEnabled = false
+            if (targetPkg == packageName) {
+                // --- NEW FEATURE START ---
+                val lockedAt = Prefs(this).getGateLockedAt(targetPkg)
+                val elapsed = System.currentTimeMillis() - lockedAt
+                val remainingMs = (60 * 60 * 1000L) - elapsed
+                val remainingMin = (remainingMs / 60000).coerceAtLeast(0)
+                status.text = "Too many wrong attempts. Try again in $remainingMin minute(s)."
+
+                // Enable button to show remaining time on tap
+                submit.isEnabled = true
+                submit.setOnClickListener {
+                    val lockedAtNow = Prefs(this).getGateLockedAt(targetPkg)
+                    val elapsedNow = System.currentTimeMillis() - lockedAtNow
+                    val remainingMsNow = (60 * 60 * 1000L) - elapsedNow
+                    val remainingMinNow = (remainingMsNow / 60000).coerceAtLeast(0)
+                    Toast.makeText(
+                        this,
+                        "Try again in $remainingMinNow minute(s).",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+                // --- NEW FEATURE END ---
+            } else {
+                status.text = getString(R.string.locked_too_many)
+                submit.isEnabled = false
+            }
             return
         }
 
@@ -58,10 +85,12 @@ class LockActivity : Activity() {
             if (ok) {
                 limiter.reset()
                 if (targetPkg == packageName) {
-                    // unlocked app itself -> open settings
-                    startActivity(Intent(this, SettingsActivity::class.java))
+                    if (entryPoint == "notification") {
+                        startActivity(Intent(this, SettingsActivity::class.java))
+                    } else {
+                        startActivity(Intent(this, SettingsActivity::class.java))
+                    }
                 } else {
-                    // unlock third-party app for session so reopening while in-app won't re-prompt
                     PinGate.unlockForSession(targetPkg)
                 }
                 finish()
@@ -69,9 +98,30 @@ class LockActivity : Activity() {
                 limiter.registerFailure()
                 val rem = limiter.remainingAttempts()
                 if (limiter.isLockedOut()) {
-                    status.text = getString(R.string.locked_too_many)
-                    submit.isEnabled = false
-                    Toast.makeText(this, getString(R.string.locked_too_many), Toast.LENGTH_LONG).show()
+                    if (targetPkg == packageName) {
+                        // --- NEW FEATURE START ---
+                        val lockedAt = Prefs(this).getGateLockedAt(targetPkg)
+                        val elapsed = System.currentTimeMillis() - lockedAt
+                        val remainingMs = (60 * 60 * 1000L) - elapsed
+                        val remainingMin = (remainingMs / 60000).coerceAtLeast(0)
+                        status.text = "Too many wrong attempts. Try again in $remainingMin minute(s)."
+                        submit.isEnabled = true
+                        submit.setOnClickListener {
+                            val lockedAtNow = Prefs(this).getGateLockedAt(targetPkg)
+                            val elapsedNow = System.currentTimeMillis() - lockedAtNow
+                            val remainingMsNow = (60 * 60 * 1000L) - elapsedNow
+                            val remainingMinNow = (remainingMsNow / 60000).coerceAtLeast(0)
+                            Toast.makeText(
+                                this,
+                                "Try again in $remainingMinNow minute(s).",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                        // --- NEW FEATURE END ---
+                    } else {
+                        status.text = getString(R.string.locked_too_many)
+                        submit.isEnabled = false
+                    }
                 } else {
                     status.text = getString(R.string.wrong_pin) + " (" + rem + ")"
                     Toast.makeText(this, getString(R.string.wrong_pin), Toast.LENGTH_SHORT).show()
