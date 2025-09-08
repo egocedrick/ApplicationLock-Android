@@ -43,27 +43,21 @@ class LockActivity : Activity() {
         // If gate locked for scope -> block
         if (limiter.isLockedOut()) {
             if (targetPkg == packageName) {
-                // --- NEW FEATURE START ---
-                val lockedAt = Prefs(this).getGateLockedAt(targetPkg)
-                val elapsed = System.currentTimeMillis() - lockedAt
-                val remainingMs = (60 * 60 * 1000L) - elapsed
-                val remainingMin = (remainingMs / 60000).coerceAtLeast(0)
+                // --- FIXED FEATURE START ---
+                val remainingMin = limiter.remainingLockMinutes()
                 status.text = "Too many wrong attempts. Try again in $remainingMin minute(s)."
 
-                // Enable button to show remaining time on tap
+                // Keep button enabled -> shows updated time when tapped
                 submit.isEnabled = true
                 submit.setOnClickListener {
-                    val lockedAtNow = Prefs(this).getGateLockedAt(targetPkg)
-                    val elapsedNow = System.currentTimeMillis() - lockedAtNow
-                    val remainingMsNow = (60 * 60 * 1000L) - elapsedNow
-                    val remainingMinNow = (remainingMsNow / 60000).coerceAtLeast(0)
+                    val remNow = limiter.remainingLockMinutes()
                     Toast.makeText(
                         this,
-                        "Try again in $remainingMinNow minute(s).",
+                        "Try again in $remNow minute(s).",
                         Toast.LENGTH_SHORT
                     ).show()
                 }
-                // --- NEW FEATURE END ---
+                // --- FIXED FEATURE END ---
             } else {
                 status.text = getString(R.string.locked_too_many)
                 submit.isEnabled = false
@@ -72,7 +66,11 @@ class LockActivity : Activity() {
         }
 
         // Show correct prompt text
-        status.text = if (targetPkg == packageName) getString(R.string.enter_app_pin) else getString(R.string.enter_lock_pin)
+        status.text = if (targetPkg == packageName) {
+            getString(R.string.enter_app_pin)
+        } else {
+            getString(R.string.enter_lock_pin)
+        }
 
         submit.setOnClickListener {
             val entered = pinInput.text.toString()
@@ -96,34 +94,29 @@ class LockActivity : Activity() {
                 finish()
             } else {
                 limiter.registerFailure()
-                val rem = limiter.remainingAttempts()
                 if (limiter.isLockedOut()) {
                     if (targetPkg == packageName) {
-                        // --- NEW FEATURE START ---
-                        val lockedAt = Prefs(this).getGateLockedAt(targetPkg)
-                        val elapsed = System.currentTimeMillis() - lockedAt
-                        val remainingMs = (60 * 60 * 1000L) - elapsed
-                        val remainingMin = (remainingMs / 60000).coerceAtLeast(0)
-                        status.text = "Too many wrong attempts. Try again in $remainingMin minute(s)."
+                        // --- FIXED FEATURE START ---
+                        val remainingMin = limiter.remainingLockMinutes()
+                        status.text =
+                            "Too many wrong attempts. Try again in $remainingMin minute(s)."
                         submit.isEnabled = true
                         submit.setOnClickListener {
-                            val lockedAtNow = Prefs(this).getGateLockedAt(targetPkg)
-                            val elapsedNow = System.currentTimeMillis() - lockedAtNow
-                            val remainingMsNow = (60 * 60 * 1000L) - elapsedNow
-                            val remainingMinNow = (remainingMsNow / 60000).coerceAtLeast(0)
+                            val remNow = limiter.remainingLockMinutes()
                             Toast.makeText(
                                 this,
-                                "Try again in $remainingMinNow minute(s).",
+                                "Try again in $remNow minute(s).",
                                 Toast.LENGTH_SHORT
                             ).show()
                         }
-                        // --- NEW FEATURE END ---
+                        // --- FIXED FEATURE END ---
                     } else {
                         status.text = getString(R.string.locked_too_many)
                         submit.isEnabled = false
                     }
                 } else {
-                    status.text = getString(R.string.wrong_pin) + " (" + rem + ")"
+                    val rem = limiter.remainingAttempts()
+                    status.text = getString(R.string.wrong_pin) + " ($rem)"
                     Toast.makeText(this, getString(R.string.wrong_pin), Toast.LENGTH_SHORT).show()
                 }
             }
