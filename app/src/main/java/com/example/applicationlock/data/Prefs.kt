@@ -57,7 +57,9 @@ class Prefs(context: Context) {
         pkg != null && getLockedApps().contains(pkg)
 
     // ----------------- ATTEMPT LIMITER -----------------
+    // COMMENTED OUT: All attempt limiter logic disabled for unlimited retries
 
+    /*
     fun getAttemptsLeft(scope: String): Int {
         val attempts = prefs.getInt(KEY_ATTEMPTS_PREFIX + scope, DEFAULT_ATTEMPTS)
 
@@ -119,8 +121,6 @@ class Prefs(context: Context) {
         return (until - now).coerceAtLeast(0L)
     }
 
-    // ----------------- BULK RESET -----------------
-
     fun resetAllAttemptsForScopes(scopes: Set<String>) {
         val editor = prefs.edit()
         for (s in scopes) {
@@ -135,6 +135,7 @@ class Prefs(context: Context) {
         val locked = getLockedApps()
         resetAllAttemptsForScopes(locked + packageName)
     }
+    */
 
     fun clearAll() {
         prefs.edit().clear().apply()

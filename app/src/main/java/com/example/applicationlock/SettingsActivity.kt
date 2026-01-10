@@ -19,6 +19,7 @@ import com.example.applicationlock.service.AppLockService
 
 /**
  * Simple UI for setting pins and adding/removing locked package names.
+ * NOTE: Attempt reset calls commented out (unlimited retries).
  */
 class SettingsActivity : AppCompatActivity() {
 
@@ -66,7 +67,7 @@ class SettingsActivity : AppCompatActivity() {
         btnRemove.setOnClickListener {
             val p = editPkg.text.toString().trim()
             if (p.isNotEmpty()) {
-                repo.remove(p) // removal clears attempts for that pkg
+                repo.remove(p) // removal clears attempts originally, now disabled
                 txtStatus.text = "Unlocked: $p"
             }
         }
@@ -112,7 +113,7 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         btnStart.setOnClickListener {
-            repo.resetAllAttempts()
+            // repo.resetAllAttempts() // COMMENTED OUT: unlimited retries, no reset needed
             val svc = Intent(this, AppLockService::class.java)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 startForegroundService(svc)
@@ -128,7 +129,7 @@ class SettingsActivity : AppCompatActivity() {
 
         btnStop.setOnClickListener {
             stopService(Intent(this, AppLockService::class.java))
-            repo.resetAllAttempts()
+            // repo.resetAllAttempts() // COMMENTED OUT: unlimited retries, no reset needed
             getSharedPreferences("app_lock_prefs", MODE_PRIVATE)
                 .edit()
                 .putBoolean("protection_enabled", false)

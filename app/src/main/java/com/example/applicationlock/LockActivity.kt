@@ -10,8 +10,8 @@ import android.widget.TextView
 import android.widget.Toast
 import com.example.applicationlock.data.LockedAppsRepo
 import com.example.applicationlock.data.PinStore
-import com.example.applicationlock.data.Prefs
-import com.example.applicationlock.security.AttemptLimiter
+// import com.example.applicationlock.data.Prefs
+// import com.example.applicationlock.security.AttemptLimiter
 import com.example.applicationlock.security.PinGate
 
 class LockActivity : Activity() {
@@ -21,7 +21,7 @@ class LockActivity : Activity() {
     private lateinit var status: TextView
     private lateinit var pinStore: PinStore
     private lateinit var repo: LockedAppsRepo
-    private lateinit var limiter: AttemptLimiter
+    // private lateinit var limiter: AttemptLimiter
     private var targetPkg: String = ""
     private var entryPoint: String? = null
 
@@ -38,32 +38,15 @@ class LockActivity : Activity() {
 
         targetPkg = intent.getStringExtra(Constants.EXTRA_TARGET_PKG) ?: packageName
         entryPoint = intent.getStringExtra(Constants.EXTRA_ENTRY_POINT)
-        limiter = AttemptLimiter(this, targetPkg)
+        // limiter = AttemptLimiter(this, targetPkg)
 
-        // If gate locked for scope -> block
+        // COMMENTED OUT: lockout check disabled
+        /*
         if (limiter.isLockedOut()) {
-            if (targetPkg == packageName) {
-                // --- FIXED FEATURE START ---
-                val remainingMin = limiter.remainingLockMinutes()
-                status.text = "Too many wrong attempts. Try again in $remainingMin minute(s)."
-
-                // Keep button enabled -> shows updated time when tapped
-                submit.isEnabled = true
-                submit.setOnClickListener {
-                    val remNow = limiter.remainingLockMinutes()
-                    Toast.makeText(
-                        this,
-                        "Try again in $remNow minute(s).",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-                // --- FIXED FEATURE END ---
-            } else {
-                status.text = getString(R.string.locked_too_many)
-                submit.isEnabled = false
-            }
+            ...
             return
         }
+        */
 
         // Show correct prompt text
         status.text = if (targetPkg == packageName) {
@@ -81,7 +64,7 @@ class LockActivity : Activity() {
             }
 
             if (ok) {
-                limiter.reset()
+                // limiter.reset() // COMMENTED OUT: no attempt reset needed
                 if (targetPkg == packageName) {
                     if (entryPoint == "notification") {
                         startActivity(Intent(this, SettingsActivity::class.java))
@@ -93,32 +76,14 @@ class LockActivity : Activity() {
                 }
                 finish()
             } else {
-                limiter.registerFailure()
-                if (limiter.isLockedOut()) {
-                    if (targetPkg == packageName) {
-                        // --- FIXED FEATURE START ---
-                        val remainingMin = limiter.remainingLockMinutes()
-                        status.text =
-                            "Too many wrong attempts. Try again in $remainingMin minute(s)."
-                        submit.isEnabled = true
-                        submit.setOnClickListener {
-                            val remNow = limiter.remainingLockMinutes()
-                            Toast.makeText(
-                                this,
-                                "Try again in $remNow minute(s).",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                        // --- FIXED FEATURE END ---
-                    } else {
-                        status.text = getString(R.string.locked_too_many)
-                        submit.isEnabled = false
-                    }
-                } else {
-                    val rem = limiter.remainingAttempts()
-                    status.text = getString(R.string.wrong_pin) + " ($rem)"
-                    Toast.makeText(this, getString(R.string.wrong_pin), Toast.LENGTH_SHORT).show()
-                }
+                // limiter.registerFailure() // COMMENTED OUT: no attempt decrement
+                // if (limiter.isLockedOut()) { ... } // COMMENTED OUT: no lockout
+                // else {
+                //     val rem = limiter.remainingAttempts()
+                //     status.text = getString(R.string.wrong_pin) + " ($rem)"
+                // }
+                status.text = getString(R.string.wrong_pin)
+                Toast.makeText(this, getString(R.string.wrong_pin), Toast.LENGTH_SHORT).show()
             }
         }
     }
