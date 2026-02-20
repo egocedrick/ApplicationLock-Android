@@ -21,7 +21,6 @@ class LockActivity : Activity() {
     private lateinit var status: TextView
     private lateinit var pinStore: PinStore
     private lateinit var repo: LockedAppsRepo
-    // private lateinit var limiter: AttemptLimiter
     private var targetPkg: String = ""
     private var entryPoint: String? = null
 
@@ -38,17 +37,7 @@ class LockActivity : Activity() {
 
         targetPkg = intent.getStringExtra(Constants.EXTRA_TARGET_PKG) ?: packageName
         entryPoint = intent.getStringExtra(Constants.EXTRA_ENTRY_POINT)
-        // limiter = AttemptLimiter(this, targetPkg)
 
-        // COMMENTED OUT: lockout check disabled
-        /*
-        if (limiter.isLockedOut()) {
-            ...
-            return
-        }
-        */
-
-        // Show correct prompt text
         status.text = if (targetPkg == packageName) {
             getString(R.string.enter_app_pin)
         } else {
@@ -64,7 +53,7 @@ class LockActivity : Activity() {
             }
 
             if (ok) {
-                // limiter.reset() // COMMENTED OUT: no attempt reset needed
+
                 if (targetPkg == packageName) {
                     if (entryPoint == "notification") {
                         startActivity(Intent(this, SettingsActivity::class.java))
@@ -76,12 +65,7 @@ class LockActivity : Activity() {
                 }
                 finish()
             } else {
-                // limiter.registerFailure() // COMMENTED OUT: no attempt decrement
-                // if (limiter.isLockedOut()) { ... } // COMMENTED OUT: no lockout
-                // else {
-                //     val rem = limiter.remainingAttempts()
-                //     status.text = getString(R.string.wrong_pin) + " ($rem)"
-                // }
+
                 status.text = getString(R.string.wrong_pin)
                 Toast.makeText(this, getString(R.string.wrong_pin), Toast.LENGTH_SHORT).show()
             }
@@ -91,6 +75,5 @@ class LockActivity : Activity() {
     @Deprecated("Deprecated in Java")
     @SuppressLint("GestureBackNavigation")
     override fun onBackPressed() {
-        // prevent bypass
     }
 }

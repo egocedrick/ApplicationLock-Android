@@ -17,10 +17,6 @@ import com.example.applicationlock.data.LockedAppsRepo
 import com.example.applicationlock.data.PinStore
 import com.example.applicationlock.service.AppLockService
 
-/**
- * Simple UI for setting pins and adding/removing locked package names.
- * NOTE: Attempt reset calls commented out (unlimited retries).
- */
 class SettingsActivity : AppCompatActivity() {
 
     private lateinit var repo: LockedAppsRepo
@@ -44,7 +40,7 @@ class SettingsActivity : AppCompatActivity() {
         val btnUsage = findViewById<Button>(R.id.btn_usage_perm)
         val btnOverlay = findViewById<Button>(R.id.btn_overlay_perm)
         val btnEnableAdmin = findViewById<Button>(R.id.btn_enable_admin)
-        val btnDisableAdmin = findViewById<Button>(R.id.btn_disable_admin) // optional kung nasa layout
+        val btnDisableAdmin = findViewById<Button>(R.id.btn_disable_admin)
         val btnStart = findViewById<Button>(R.id.btn_start)
         val btnStop = findViewById<Button>(R.id.btn_stop)
 
@@ -67,7 +63,7 @@ class SettingsActivity : AppCompatActivity() {
         btnRemove.setOnClickListener {
             val p = editPkg.text.toString().trim()
             if (p.isNotEmpty()) {
-                repo.remove(p) // removal clears attempts originally, now disabled
+                repo.remove(p)
                 txtStatus.text = "Unlocked: $p"
             }
         }
@@ -83,7 +79,6 @@ class SettingsActivity : AppCompatActivity() {
             }
         }
 
-        // Enable Device Admin
         btnEnableAdmin.setOnClickListener {
             val compName = ComponentName(this, MyDeviceAdminReceiver::class.java)
             val dpm = getSystemService(DEVICE_POLICY_SERVICE) as DevicePolicyManager
@@ -100,7 +95,6 @@ class SettingsActivity : AppCompatActivity() {
             }
         }
 
-        // Disable Device Admin (optional)
         btnDisableAdmin?.setOnClickListener {
             val compName = ComponentName(this, MyDeviceAdminReceiver::class.java)
             val dpm = getSystemService(DEVICE_POLICY_SERVICE) as DevicePolicyManager
@@ -113,7 +107,7 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         btnStart.setOnClickListener {
-            // repo.resetAllAttempts() // COMMENTED OUT: unlimited retries, no reset needed
+
             val svc = Intent(this, AppLockService::class.java)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 startForegroundService(svc)
@@ -129,7 +123,7 @@ class SettingsActivity : AppCompatActivity() {
 
         btnStop.setOnClickListener {
             stopService(Intent(this, AppLockService::class.java))
-            // repo.resetAllAttempts() // COMMENTED OUT: unlimited retries, no reset needed
+
             getSharedPreferences("app_lock_prefs", MODE_PRIVATE)
                 .edit()
                 .putBoolean("protection_enabled", false)

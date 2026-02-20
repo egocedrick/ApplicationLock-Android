@@ -3,7 +3,6 @@
     package="com.example.applicationlock"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Core permissions -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission
@@ -18,7 +17,6 @@
         android:label="@string/app_name"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
 
-        <!-- Main entry point -->
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -26,14 +24,10 @@
             </intent-filter>
         </activity>
 
-        <!-- Settings screen -->
         <activity android:name=".SettingsActivity" android:exported="true"/>
 
-        <!-- PIN setup screen -->
         <activity android:name=".AppPinActivity" android:exported="false"/>
 
-        <!-- Lock screen gate -->
-        <!-- NOTE: Unlimited attempts now, lockout logic disabled in LockActivity -->
         <activity
             android:name=".LockActivity"
             android:excludeFromRecents="true"
@@ -41,20 +35,16 @@
             android:noHistory="true"
             android:exported="false" />
 
-        <!-- Background services -->
         <service android:name=".service.AppLockService" android:exported="false"/>
-        <!-- Optional watchdog service -->
+
         <service android:name=".service.WatchdogService" android:exported="false"/>
 
-        <!-- Boot receiver -->
         <receiver android:name=".BootReceiver" android:enabled="true" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
             </intent-filter>
         </receiver>
 
-        <!-- Device admin receiver -->
-        <!-- NOTE: Still active for device policies, not related to attempt limiter -->
         <receiver
             android:name=".MyDeviceAdminReceiver"
             android:permission="android.permission.BIND_DEVICE_ADMIN"
