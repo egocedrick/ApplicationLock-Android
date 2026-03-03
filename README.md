@@ -30,6 +30,25 @@ A Kotlin-based Android app that simulates application-level locking and protecti
   - Permission handling
   - Persistent storage
   - App-level access control
+ 
+## Application Lock
+Features
+- Set up PIN for the app itself (8 digits).
+- Assign PINs to other applications (8 digits).
+- Add/remove applications for locking via buttons.
+- Usage access and overlay permission handling.
+- Enable/disable device admin to prevent uninstallation.
+- Start/stop protection toggle for all locked apps.
+- Foreground lock screen overlay.
+- Locking mechanism persists after device restart.
+
+## Impact
+- Provides controlled access to company ticketing applications.
+- Protects sensitive client files from unauthorized use.
+- Prevents installation of unauthorized apps and access to malicious websites.
+- Restricts camera and settings modifications without consent.
+- Ensures company apps cannot be uninstalled intentionally.
+
 
 ## Project Structure
 - `/ui` – User interface components and flows
