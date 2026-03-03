@@ -31,8 +31,7 @@ A Kotlin-based Android app that simulates application-level locking and protecti
   - Persistent storage
   - App-level access control
  
-## Application Lock
-Features
+## Features
 - Set up PIN for the app itself (8 digits).
 - Assign PINs to other applications (8 digits).
 - Add/remove applications for locking via buttons.
