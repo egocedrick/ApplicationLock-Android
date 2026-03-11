@@ -7,8 +7,11 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.applicationlock.data.PinStore
+import com.example.applicationlock.viewmodel.AppPinViewModel
+
 
 class AppPinActivity : AppCompatActivity() {
+    private lateinit var appPinViewModel: AppPinViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -17,19 +20,21 @@ class AppPinActivity : AppCompatActivity() {
         val edit = findViewById<EditText>(R.id.edit_pin)
         val btn = findViewById<Button>(R.id.btn_confirm_pin)
         val pinStore = PinStore(this)
-
         val setFor = intent.getStringExtra(Constants.EXTRA_SET_FOR) ?: "app"
+
+        appPinViewModel = AppPinViewModel(pinStore)
+
+        appPinViewModel.pinSetupStatus.observe(this) { message ->
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+            if (message == "PIN saved") {
+                startActivity(Intent(this, SettingsActivity::class.java))
+                finish()
+            }
+        }
 
         btn.setOnClickListener {
             val pin = edit.text.toString().trim()
-            if (pin.length < 4 || pin.length > 8) {
-                Toast.makeText(this, "PIN must be 4–8 digits", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            if (setFor == "app") pinStore.saveAppPin(pin) else pinStore.saveLockPin(pin)
-            Toast.makeText(this, "PIN saved", Toast.LENGTH_SHORT).show()
-            startActivity(Intent(this, SettingsActivity::class.java))
-            finish()
+            appPinViewModel.savePin(pin, setFor)
         }
     }
 }

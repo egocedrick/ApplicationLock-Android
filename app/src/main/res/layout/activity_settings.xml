@@ -2,49 +2,59 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp"
-    android:background="#121212">
+    android:background="#F5F5F5"
+    android:padding="20dp">
 
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
+        <!-- Header -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="⚙️ App Lock Settings"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="#333333"
+            android:paddingBottom="24dp"/>
+
+        <!-- PIN Buttons -->
         <Button
             android:id="@+id/btn_set_app_pin"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Set App PIN"
-            android:backgroundTint="#03DAC5"
-            android:textColor="#000000" />
+            android:backgroundTint="#90CAF9"
+            android:textColor="#000000"
+            android:layout_marginBottom="12dp"/>
 
         <Button
             android:id="@+id/btn_set_lock_pin"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Set Lock PIN (other apps)"
-            android:layout_marginTop="8dp"
-            android:backgroundTint="#03DAC5"
-            android:textColor="#000000" />
+            android:text="Set Lock PIN"
+            android:backgroundTint="#90CAF9"
+            android:textColor="#000000"
+            android:layout_marginBottom="20dp"/>
 
-        <View
-            android:layout_height="12dp"
-            android:layout_width="match_parent" />
-
+        <!-- Package Input -->
         <EditText
             android:id="@+id/edit_package"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Package to lock (e.g. com.android.chrome)"
-            android:textColor="#FFFFFF"
-            android:textColorHint="#AAAAAA"
-            android:backgroundTint="#FFFFFF" />
+            android:hint="Package name (e.g. com.android.chrome)"
+            android:textColor="#212121"
+            android:textColorHint="#757575"
+            android:backgroundTint="#90CAF9"
+            android:layout_marginBottom="12dp"/>
 
         <LinearLayout
             android:orientation="horizontal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp">
+            android:layout_marginBottom="20dp">
 
             <Button
                 android:id="@+id/btn_add_pkg"
@@ -52,8 +62,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Add"
-                android:backgroundTint="#03DAC5"
-                android:textColor="#000000" />
+                android:backgroundTint="#A5D6A7"
+                android:textColor="#000000"/>
 
             <Button
                 android:id="@+id/btn_remove_pkg"
@@ -62,68 +72,63 @@
                 android:layout_weight="1"
                 android:layout_marginStart="8dp"
                 android:text="Remove"
-                android:backgroundTint="#CF6679"
-                android:textColor="#FFFFFF" />
+                android:backgroundTint="#EF9A9A"
+                android:textColor="#000000"/>
         </LinearLayout>
 
-        <View
-            android:layout_height="16dp"
-            android:layout_width="match_parent" />
-
+        <!-- Permissions -->
         <Button
             android:id="@+id/btn_usage_perm"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Open Usage Access"
-            android:backgroundTint="#03DAC5"
-            android:textColor="#000000" />
+            android:text="Usage Access"
+            android:backgroundTint="#FFD54F"
+            android:textColor="#000000"
+            android:layout_marginBottom="12dp"/>
 
         <Button
             android:id="@+id/btn_overlay_perm"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Open Overlay Permission"
-            android:layout_marginTop="8dp"
-            android:backgroundTint="#03DAC5"
-            android:textColor="#000000" />
+            android:text="Overlay Permission"
+            android:backgroundTint="#FFD54F"
+            android:textColor="#000000"
+            android:layout_marginBottom="20dp"/>
 
-        <!-- NEW: Device Admin Buttons -->
+        <!-- Admin -->
         <Button
             android:id="@+id/btn_enable_admin"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Enable Device Admin"
-            android:layout_marginTop="8dp"
-            android:backgroundTint="#03DAC5"
-            android:textColor="#000000" />
+            android:backgroundTint="#81D4FA"
+            android:textColor="#000000"
+            android:layout_marginBottom="12dp"/>
 
         <Button
             android:id="@+id/btn_disable_admin"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Disable Device Admin"
-            android:layout_marginTop="4dp"
-            android:backgroundTint="#CF6679"
-            android:textColor="#FFFFFF" />
-        <!-- END NEW -->
+            android:backgroundTint="#EF9A9A"
+            android:textColor="#000000"
+            android:layout_marginBottom="20dp"/>
 
-        <View
-            android:layout_height="12dp"
-            android:layout_width="match_parent" />
-
+        <!-- Protection -->
         <LinearLayout
             android:orientation="horizontal"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp">
 
             <Button
                 android:id="@+id/btn_start"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Start Protection"
-                android:backgroundTint="#03DAC5"
-                android:textColor="#000000" />
+                android:text="Start"
+                android:backgroundTint="#A5D6A7"
+                android:textColor="#000000"/>
 
             <Button
                 android:id="@+id/btn_stop"
@@ -131,16 +136,18 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginStart="8dp"
-                android:text="Stop Protection"
-                android:backgroundTint="#CF6679"
-                android:textColor="#FFFFFF" />
+                android:text="Stop"
+                android:backgroundTint="#EF9A9A"
+                android:textColor="#000000"/>
         </LinearLayout>
 
+        <!-- Status -->
         <TextView
             android:id="@+id/txt_status"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingTop="12dp"
-            android:textColor="#FFFFFF" />
+            android:textColor="#333333"
+            android:textSize="14sp"/>
     </LinearLayout>
 </ScrollView>

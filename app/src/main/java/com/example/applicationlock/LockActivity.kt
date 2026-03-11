@@ -8,19 +8,16 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
-import com.example.applicationlock.data.LockedAppsRepo
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import com.example.applicationlock.data.PinStore
-// import com.example.applicationlock.data.Prefs
-// import com.example.applicationlock.security.AttemptLimiter
-import com.example.applicationlock.security.PinGate
+import com.example.applicationlock.viewmodel.LockViewModel
 
-class LockActivity : Activity() {
-
+class LockActivity : AppCompatActivity() {
     private lateinit var pinInput: EditText
     private lateinit var submit: Button
     private lateinit var status: TextView
-    private lateinit var pinStore: PinStore
-    private lateinit var repo: LockedAppsRepo
+    private lateinit var lockViewModel: LockViewModel
     private var targetPkg: String = ""
     private var entryPoint: String? = null
 
@@ -32,8 +29,8 @@ class LockActivity : Activity() {
         submit = findViewById(R.id.submit_button)
         status = findViewById(R.id.status_text)
 
-        pinStore = PinStore(this)
-        repo = LockedAppsRepo(this)
+        val pinStore = PinStore(this)
+        lockViewModel = LockViewModel(pinStore)
 
         targetPkg = intent.getStringExtra(Constants.EXTRA_TARGET_PKG) ?: packageName
         entryPoint = intent.getStringExtra(Constants.EXTRA_ENTRY_POINT)
@@ -44,36 +41,34 @@ class LockActivity : Activity() {
             getString(R.string.enter_lock_pin)
         }
 
-        submit.setOnClickListener {
-            val entered = pinInput.text.toString()
-            val ok = if (targetPkg == packageName) {
-                pinStore.verifyAppPin(entered)
-            } else {
-                pinStore.verifyLockPin(entered)
-            }
-
-            if (ok) {
-
-                if (targetPkg == packageName) {
-                    if (entryPoint == "notification") {
-                        startActivity(Intent(this, SettingsActivity::class.java))
-                    } else {
-                        startActivity(Intent(this, SettingsActivity::class.java))
-                    }
-                } else {
-                    PinGate.unlockForSession(targetPkg)
-                }
-                finish()
-            } else {
-
+        lockViewModel.pinStatus.observe(this) { ok ->
+            if (!ok) {
                 status.text = getString(R.string.wrong_pin)
                 Toast.makeText(this, getString(R.string.wrong_pin), Toast.LENGTH_SHORT).show()
             }
+        }
+
+        lockViewModel.unlockAction.observe(this) { action ->
+            when (action) {
+                "settings" -> {
+                    startActivity(Intent(this, SettingsActivity::class.java))
+                    finish()
+                }
+                "unlocked" -> {
+                    finish()
+                }
+            }
+        }
+
+        submit.setOnClickListener {
+            val entered = pinInput.text.toString()
+            lockViewModel.validatePin(entered, targetPkg, packageName, entryPoint)
         }
     }
 
     @Deprecated("Deprecated in Java")
     @SuppressLint("GestureBackNavigation")
     override fun onBackPressed() {
+        super.onBackPressed()
     }
 }

@@ -17,6 +17,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.applicationlock.Constants
 import com.example.applicationlock.LockActivity
+import com.example.applicationlock.R
 import com.example.applicationlock.data.LockedAppsRepo
 import com.example.applicationlock.security.PinGate
 
@@ -53,8 +54,13 @@ class AppLockService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        startForegroundNotification()
-        Log.d(TAG, "onStartCommand: START_STICKY")
+        val notification = NotificationCompat.Builder(this, "lock_channel")
+            .setContentTitle("App Lock Active")
+            .setContentText("Protection is running")
+            .setSmallIcon(R.drawable.ic_lock)
+            .build()
+
+        startForeground(1, notification)
         return START_STICKY
     }
 
