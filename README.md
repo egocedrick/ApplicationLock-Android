@@ -61,7 +61,7 @@ This app was built and hardened using the
 **[BBS Framework](https://github.com/egocedrick/BBS-Framework)** 
 — a personal Build-Break-Secure methodology for mobile development.
 
-The Safe Mode vulnerability was discovered in this app 
+The Safe Mode vulnerability discovered in this app 
 is what directly inspired the creation of BBS.
 
 ## Setup Instructions
