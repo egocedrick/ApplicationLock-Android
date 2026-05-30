@@ -55,6 +55,15 @@ A Kotlin-based Android app that simulates application-level locking and protecti
 - `/lockcore` – PIN setup, validation, and persistence
 - `/monitor` – Package name tracking and protection triggers
 
+## Security Methodology
+
+This app was built and hardened using the 
+**[BBS Framework](https://github.com/egocedrick/BBS-Framework)** 
+— a personal Build-Break-Secure methodology for mobile development.
+
+The Safe Mode vulnerability was discovered in this app 
+is what directly inspired the creation of BBS.
+
 ## Setup Instructions
 1. Clone the repository:
    ```bash
